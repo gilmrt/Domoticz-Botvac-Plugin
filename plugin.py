@@ -14,8 +14,8 @@
         <param field="Mode3" label="Secret" width="200px" required="true" default=""/>
         <param field="Mode4" label="Debug" width="75px">
             <options>
-                <option label="True" value="Debug" default="true"/>
-                <option label="False" value="Normal"/>
+                <option label="True" value="Debug"/>
+                <option label="False" value="Normal" default="true"/>
             </options>
         </param>
         <param field="Mode5" label="Update interval (sec)" width="30px" required="true" default="60"/>
@@ -23,7 +23,7 @@
 </plugin>
 """
 import Domoticz
-import pybotvac
+from pybotvac import Robot
 
 class BasePlugin:
     enabled = False
@@ -207,9 +207,9 @@ class BasePlugin:
         # API call every 6 heartbeats (~1min)
         if self.HeartBeatsCount >= 6:
             self.HeartBeatsCount = 0
-            self.BotvacGetValues()
+            botvacGetValues()
 
-    def BotvacGetValues(self ):
+    def botvacGetValues(self):
         DEVICE_NAME = Parameters["Mode1"]
         DEVICE_SERIAL = Parameters["Mode2"]
         API_SECRET = Parameters["Mode3"]
