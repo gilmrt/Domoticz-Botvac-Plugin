@@ -111,18 +111,18 @@ class BasePlugin:
             Domoticz.Debugging(1)
             DumpConfigToLog()
 
-        if self.iconName not in Images: 
+        if iconName not in Images: 
             Domoticz.Image('icons.zip').Create()
-        iconID = Images[self.iconName].ID
+        iconID = Images[iconName].ID
 
-        if self.statusUnit not in Devices:
-            Domoticz.Device(Name='Status', Unit=self.statusUnit, Type=17,  Switchtype=17, Image=iconID, Used=1).Create()
+        if statusUnit not in Devices:
+            Domoticz.Device(Name='Status', Unit=statusUnit, Type=17,  Switchtype=17, Image=iconID, Used=1).Create()
 
-        if self.controlUnit not in Devices:
-            Domoticz.Device(Name='Control', Unit=self.controlUnit, TypeName='Selector Switch', Image=iconID, Options=self.controlOptions, Used=1).Create()
+        if controlUnit not in Devices:
+            Domoticz.Device(Name='Control', Unit=controlUnit, TypeName='Selector Switch', Image=iconID, Options=controlOptions, Used=1).Create()
 
-        if self.scheduleUnit not in Devices:
-            Domoticz.Device(Name='Schedule', Unit=self.scheduleUnit, TypeName='Switch', Image=iconID, Used=1).Create()
+        if scheduleUnit not in Devices:
+            Domoticz.Device(Name='Schedule', Unit=scheduleUnit, TypeName='Switch', Image=iconID, Used=1).Create()
 
         Domoticz.Heartbeat(int(Parameters['Mode5']))
         Domoticz.Debug("onStart called")
@@ -147,46 +147,46 @@ class BasePlugin:
         action = response['action']
         category = response['cleaning']['category']
         
-        if self.statusUnit not in Devices:
+        if statusUnit not in Devices:
             Domoticz.Error('Status device is required')
             return
 
-        if self.statusUnit == Unit:
-            if 'On' == Command and self.isOFF:
+        if statusUnit == Unit:
+            if 'On' == Command and isOFF:
                 robot.start_cleaning()
                 if category == 1: #manual
-                    Devices[statusUnit].Update(1, self.actions.get(3))
+                    Devices[statusUnit].Update(1, actions.get(3))
                 elif category == 2: #house
-                    Devices[statusUnit].Update(1, self.actions.get(1))
+                    Devices[statusUnit].Update(1, actions.get(1))
                 elif category == 3: #spot
-                    Devices[statusUnit].Update(1, self.actions.get(2))
+                    Devices[statusUnit].Update(1, actions.get(2))
                 elif category == 4: #map
-                    Devices[statusUnit].Update(1, self.actions.get(11))
-            elif 'Off' == Command and self.isON:
+                    Devices[statusUnit].Update(1, actions.get(11))
+            elif 'Off' == Command and isON:
                 robot.send_to_base()
-                Devices[statusUnit].Update(0, self.actions.get(4))
+                Devices[statusUnit].Update(0, actions.get(4))
 
-        if self.controlUnit == Unit:
-            if Level == 10 and self.isOFF: # Clean
+        if controlUnit == Unit:
+            if Level == 10 and isOFF: # Clean
                 if state == 1: #Idle
                     robot.start_cleaning()
                 elif state == 3: #Pause
                     robot.resume_cleaning()
-                Devices[statusUnit].Update(1, self.actions.get(action))
-            elif Level == 20 and self.isON: # Base
+                Devices[statusUnit].Update(1, actions.get(action))
+            elif Level == 20 and isON: # Base
                 robot.send_to_base()
-                Devices[statusUnit].Update(0, self.actions.get(action))
-            elif Level == 30 and self.isOFF: # Spot
+                Devices[statusUnit].Update(0, actions.get(action))
+            elif Level == 30 and isOFF: # Spot
                 robot.start_spot_cleaning()
-                Devices[statusUnit].Update(1, self.actions.get(action))
-            elif Level == 40 and self.isON: # Pause
+                Devices[statusUnit].Update(1, actions.get(action))
+            elif Level == 40 and isON: # Pause
                 robot.pause_cleaning()
-                Devices[statusUnit].Update(0, self.actions.get(action))
-            elif Level == 50 and self.isON: # Stop
+                Devices[statusUnit].Update(0, actions.get(action))
+            elif Level == 50 and isON: # Stop
                 robot.stop_cleaning()
-                Devices[statusUnit].Update(0, self.actions.get(action))
+                Devices[statusUnit].Update(0, actions.get(action))
 
-        if self.scheduleUnit == Unit:
+        if scheduleUnit == Unit:
             if Command == 'On' :
                 robot.enable_schedule()
                 Devices[scheduleUnit].Update(1,'')
@@ -203,10 +203,10 @@ class BasePlugin:
 
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
-        self.HeartBeatsCount = self.HeartBeatsCount + 1
+        HeartBeatsCount = HeartBeatsCount + 1
         # API call every 6 heartbeats (~1min)
-        if self.HeartBeatsCount >= 6:
-            self.HeartBeatsCount = 0
+        if HeartBeatsCount >= 6:
+            HeartBeatsCount = 0
             botvacGetValues()
 
     def botvacGetValues(self):
@@ -227,25 +227,25 @@ class BasePlugin:
 
         if state == 1: # Idle
             if isDocked:
-                statusValue = self.actions.get(102) if isCharging else self.actions.get(101) #Charging or Base
+                statusValue = actions.get(102) if isCharging else actions.get(101) #Charging or Base
             else:
-                statusValue = self.actions.get(100) #Stopped
-            controlValue = self.controlValues.get(20) if isDocked else self.controlValues.get(50) #Base or Stop
+                statusValue = actions.get(100) #Stopped
+            controlValue = controlValues.get(20) if isDocked else controlValues.get(50) #Base or Stop
 
         elif state == 2: #Busy
-            statusValue = self.actions.get(action)
-            if self.action in [1, 3, 11]: #House cleaning, Manual cleaning or Map cleaning
-                controlValue = self.controlValues.get(10) #Clean
-            elif self.action == 2: #Spot
-                controlValue = self.controlValues.get(30) #Spot
+            statusValue = actions.get(action)
+            if action in [1, 3, 11]: #House cleaning, Manual cleaning or Map cleaning
+                controlValue = controlValues.get(10) #Clean
+            elif action == 2: #Spot
+                controlValue = controlValues.get(30) #Spot
 
         elif state in [3, 4]: #Pause or Error
-            statusValue = self.states.get(state)
-            controlValue = self.controlValues.get(40) if self.states.get(state) == 3 else self.controlValues.get(50) #Pause or Stop
+            statusValue = states.get(state)
+            controlValue = controlValues.get(40) if states.get(state) == 3 else controlValues.get(50) #Pause or Stop
 
-        Devices[statusUnit].Update(self.device_on, str(self.statusValue))
-        Devices[controlUnit].Update(1, str(self.controlValue))
-        Devices[scheduleUnit].Update(self.isScheduleEnabled, '')
+        Devices[statusUnit].Update(device_on, str(statusValue))
+        Devices[controlUnit].Update(1, str(controlValue))
+        Devices[scheduleUnit].Update(isScheduleEnabled, '')
 
 
 global _plugin
@@ -287,11 +287,11 @@ def onHeartbeat():
 ### Generic helper functions
 @property
 def isON(self):
-    return Devices[self.statusUnit].nValue == 1
+    return Devices[statusUnit].nValue == 1
 
 @property
 def isOFF(self):
-    return Devices[self.statusUnit].nValue == 0
+    return Devices[statusUnit].nValue == 0
 
 def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255):
     if Unit not in Devices: return
