@@ -27,7 +27,7 @@ import pybotvac
 
 class BasePlugin:
     enabled = False
-    iconName = 'vacuum-icon'
+    iconName = 'botvac-robot-vacuum-icon'
 
     statusUnit = 1
     controlUnit = 2
