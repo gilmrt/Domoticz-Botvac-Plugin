@@ -9,8 +9,8 @@
         Python plugin to control your Neato Botvac Vacuum
     </description>
      <params>
-        <param field="Mode1" label="Neato email" width="200px" required="true" default=""/>
-        <param field="Mode2" label="Neato password" width="200px" required="true" default=""/>
+        <param field="Username" label="Neato email" width="200px" required="true" default=""/>
+        <param field="Password" label="Neato password" width="200px" required="true" password="true"/>
         <param field="Mode3" label="Botvac vacuum name" width="200px" required="true" default=""/>
         <param field="Mode4" label="Debug" width="75px">
             <options>
@@ -116,7 +116,7 @@ class BasePlugin:
     def onStart(self):
 
         # List all robots associated with account
-        botvacAccount = Account(Parameters["Mode1"], Parameters["Mode2"]).robots
+        botvacAccount = Account(Parameters["Username"], Parameters["Password"]).robots
         botvacDevice = next((botvac for botvac in botvacAccount if botvac.name == Parameters["Mode3"]), None)
         if botvacDevice is None:
             Domoticz.Log("No robot found")
@@ -173,10 +173,12 @@ class BasePlugin:
         if self.statusUnit == Unit:
             if 'On' == Command and self.isOFF:
                 robot.start_cleaning()
-                Devices[self.statusUnit].Update(1, self.actions.get(action))
+                #Devices[self.statusUnit].Update(1, self.actions.get(action))
+                UpdateDevice(self.statusUnit, 1, self.actions.get(action))
             elif 'Off' == Command and self.isON:
                 robot.send_to_base()
-                Devices[self.statusUnit].Update(0, self.actions.get(4))
+                #Devices[self.statusUnit].Update(0, self.actions.get(4))
+                UpdateDevice(self.statusUnit, 0, self.actions.get(4))
 
         if self.controlUnit == Unit:
             if Level == 10 and self.isOFF: # Clean
@@ -184,27 +186,34 @@ class BasePlugin:
                     robot.start_cleaning()
                 elif state == 3: #Pause
                     robot.resume_cleaning()
-                Devices[self.statusUnit].Update(1, self.actions.get(action))
+                #Devices[self.statusUnit].Update(1, self.actions.get(action))
+                UpdateDevice(self.statusUnit, 1, self.actions.get(action))
             elif Level == 20: # Base
                 robot.send_to_base()
-                Devices[self.statusUnit].Update(0, self.actions.get(4))
+                #Devices[self.statusUnit].Update(0, self.actions.get(4))
+                UpdateDevice(self.statusUnit, 0, self.actions.get(4))
             elif Level == 30 and self.isOFF: # Spot
                 robot.start_spot_cleaning()
-                Devices[self.statusUnit].Update(1, self.actions.get(2))
+                #Devices[self.statusUnit].Update(1, self.actions.get(2))
+                UpdateDevice(self.statusUnit, 1, self.actions.get(2))
             elif Level == 40 and self.isON: # Pause
                 robot.pause_cleaning()
-                Devices[self.statusUnit].Update(0, self.states.get(3))
+                #Devices[self.statusUnit].Update(0, self.states.get(3))
+                UpdateDevice(self.statusUnit, 0, self.actions.get(3))
             elif Level == 50 and self.isON: # Stop
                 robot.stop_cleaning()
-                Devices[self.statusUnit].Update(0, self.actions.get(100))
+                #Devices[self.statusUnit].Update(0, self.actions.get(100))
+                UpdateDevice(self.statusUnit, 0, self.actions.get(100))
 
         if self.scheduleUnit == Unit:
             if Command == 'On' :
                 robot.enable_schedule()
-                Devices[self.scheduleUnit].Update(1,'')
+                #Devices[self.scheduleUnit].Update(1,'')
+                UpdateDevice(self.statusUnit, 1, '')
             elif Command == 'Off' :
                 robot.disable_schedule()
-                Devices[self.scheduleUnit].Update(0,'')
+                #Devices[self.scheduleUnit].Update(0,'')
+                UpdateDevice(self.statusUnit, 0, '')
 
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
@@ -241,7 +250,7 @@ class BasePlugin:
 
         if state == 1: # Idle
             if isDocked:
-                statusValue = self.actions.get(102) + " (" + charge + "%)" if isCharging else self.actions.get(101) #Charging or Base
+                statusValue = self.actions.get(102) + " (" + str(charge) + "%)" if isCharging else self.actions.get(101) #Charging or Base
             else:
                 statusValue = self.actions.get(100) #Stopped
             controlValue = 20 if isDocked else 50 #Base or Stop
@@ -257,19 +266,24 @@ class BasePlugin:
             statusValue = self.states.get(state)
             controlValue = 40 if state == 3 else 50 #Pause or Stop
 
-        Devices[self.statusUnit].Update(device_on, str(statusValue))
+        #Devices[self.statusUnit].Update(device_on, str(statusValue))
+        UpdateDevice(self.statusUnit, device_on, statusValue)
         Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
             Devices[self.statusUnit].Name,
             str(device_on),
             str(statusValue)
         ))
-        Devices[self.controlUnit].Update(1, str(controlValue))
+
+        #Devices[self.controlUnit].Update(1, str(controlValue))
+        UpdateDevice(self.statusUnit, 1, controlValue)
         Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
             Devices[self.controlUnit].Name,
             '1',
             str(controlValue)
         ))
-        Devices[self.scheduleUnit].Update(isScheduleEnabled, '')
+
+        #Devices[self.scheduleUnit].Update(isScheduleEnabled, '')
+        UpdateDevice(self.statusUnit, isScheduleEnabled, '')
         Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
             Devices[self.scheduleUnit].Name,
             str(isScheduleEnabled),
