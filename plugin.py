@@ -32,7 +32,7 @@ class BasePlugin:
     DEVICE_NAME = ''
     DEVICE_SERIAL = ''
     API_SECRET = ''
-    
+
     iconName = 'botvac-robot-vacuum-icon'
 
     statusUnit = 1
@@ -203,7 +203,6 @@ class BasePlugin:
                 robot.disable_schedule()
                 UpdateDevice(self.scheduleUnit, 0, '')
 
-
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
         Domoticz.Debug("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
@@ -252,25 +251,8 @@ class BasePlugin:
             controlValue = 40 if state == 3 else 50 #Pause or Stop
 
         UpdateDevice(self.statusUnit, device_on, statusValue)
-        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
-            Devices[self.statusUnit].Name,
-            str(device_on),
-            str(statusValue)
-        ))
-
         UpdateDevice(self.controlUnit, 1, controlValue)
-        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
-            Devices[self.controlUnit].Name,
-            '1',
-            str(controlValue)
-        ))
-
         UpdateDevice(self.scheduleUnit, int(isScheduleEnabled), '')
-        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
-            Devices[self.scheduleUnit].Name,
-            str(isScheduleEnabled),
-            ''
-        ))
 
     @property
     def isON(self):
@@ -327,7 +309,7 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255):
 
         Devices[Unit].Update(nValue=nValue, sValue=str(sValue), BatteryLevel=BatteryLevel)
 
-        Domoticz.Debug("Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
+        Domoticz.Debug("After Update %s: nValue %s - sValue %s - BatteryLevel %s" % (
             Devices[Unit].Name,
             nValue,
             sValue,
