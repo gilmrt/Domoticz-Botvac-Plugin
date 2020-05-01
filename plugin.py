@@ -157,9 +157,6 @@ class BasePlugin:
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
-        #DEVICE_NAME = Parameters["Mode1"]
-        #DEVICE_SERIAL = Parameters["Mode2"]
-        #API_SECRET = Parameters["Mode3"]
         robot = Robot(self.DEVICE_SERIAL, self.API_SECRET, self.DEVICE_NAME)
         response = robot.state
         state = response['state']
@@ -173,11 +170,9 @@ class BasePlugin:
         if self.statusUnit == Unit:
             if 'On' == Command and self.isOFF:
                 robot.start_cleaning()
-                #Devices[self.statusUnit].Update(1, self.actions.get(action))
                 UpdateDevice(self.statusUnit, 1, self.actions.get(action))
             elif 'Off' == Command and self.isON:
                 robot.send_to_base()
-                #Devices[self.statusUnit].Update(0, self.actions.get(4))
                 UpdateDevice(self.statusUnit, 0, self.actions.get(4))
 
         if self.controlUnit == Unit:
@@ -186,34 +181,27 @@ class BasePlugin:
                     robot.start_cleaning()
                 elif state == 3: #Pause
                     robot.resume_cleaning()
-                #Devices[self.statusUnit].Update(1, self.actions.get(action))
                 UpdateDevice(self.statusUnit, 1, self.actions.get(action))
             elif Level == 20: # Base
                 robot.send_to_base()
-                #Devices[self.statusUnit].Update(0, self.actions.get(4))
                 UpdateDevice(self.statusUnit, 0, self.actions.get(4))
             elif Level == 30 and self.isOFF: # Spot
                 robot.start_spot_cleaning()
-                #Devices[self.statusUnit].Update(1, self.actions.get(2))
                 UpdateDevice(self.statusUnit, 1, self.actions.get(2))
             elif Level == 40 and self.isON: # Pause
                 robot.pause_cleaning()
-                #Devices[self.statusUnit].Update(0, self.states.get(3))
                 UpdateDevice(self.statusUnit, 0, self.actions.get(3))
             elif Level == 50 and self.isON: # Stop
                 robot.stop_cleaning()
-                #Devices[self.statusUnit].Update(0, self.actions.get(100))
                 UpdateDevice(self.statusUnit, 0, self.actions.get(100))
 
         if self.scheduleUnit == Unit:
             if Command == 'On' :
                 robot.enable_schedule()
-                #Devices[self.scheduleUnit].Update(1,'')
-                UpdateDevice(self.statusUnit, 1, '')
+                UpdateDevice(self.scheduleUnit, 1, '')
             elif Command == 'Off' :
                 robot.disable_schedule()
-                #Devices[self.scheduleUnit].Update(0,'')
-                UpdateDevice(self.statusUnit, 0, '')
+                UpdateDevice(self.scheduleUnit, 0, '')
 
 
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
@@ -231,9 +219,6 @@ class BasePlugin:
             self.botvacGetValues()
 
     def botvacGetValues(self):
-        # DEVICE_NAME = Parameters["Mode1"]
-        # DEVICE_SERIAL = Parameters["Mode2"]
-        # API_SECRET = Parameters["Mode3"]
         robot = Robot(self.DEVICE_SERIAL, self.API_SECRET, self.DEVICE_NAME)
         response = robot.state
         Domoticz.Debug(str(response))
@@ -266,28 +251,25 @@ class BasePlugin:
             statusValue = self.states.get(state)
             controlValue = 40 if state == 3 else 50 #Pause or Stop
 
-        #Devices[self.statusUnit].Update(device_on, str(statusValue))
         UpdateDevice(self.statusUnit, device_on, statusValue)
-        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
             Devices[self.statusUnit].Name,
             str(device_on),
             str(statusValue)
         ))
 
-        #Devices[self.controlUnit].Update(1, str(controlValue))
-        UpdateDevice(self.statusUnit, 1, controlValue)
-        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+        UpdateDevice(self.controlUnit, 1, controlValue)
+        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
             Devices[self.controlUnit].Name,
             '1',
             str(controlValue)
         ))
 
-        #Devices[self.scheduleUnit].Update(isScheduleEnabled, '')
-        UpdateDevice(self.statusUnit, isScheduleEnabled, '')
-        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+        UpdateDevice(self.scheduleUnit, int(isScheduleEnabled), '')
+        Domoticz.Debug("Values %s: nValue %s - sValue %s" % (
             Devices[self.scheduleUnit].Name,
             str(isScheduleEnabled),
-            "empty"
+            ''
         ))
 
     @property
