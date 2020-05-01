@@ -6,12 +6,12 @@
 <plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.0.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
     <description>
         <h2>Botvac vacuum</h2><br/>
-        Python plugin to control your Botvac Vacuum
+        Python plugin to control your Neato Botvac Vacuum
     </description>
      <params>
-        <param field="Mode1" label="Name" width="200px" required="true" default=""/>
-        <param field="Mode2" label="Serial" width="200px" required="true" default=""/>
-        <param field="Mode3" label="Secret" width="200px" required="true" default=""/>
+        <param field="Mode1" label="Neato email" width="200px" required="true" default=""/>
+        <param field="Mode2" label="Neato password" width="200px" required="true" default=""/>
+        <param field="Mode3" label="Botvac vacuum name" width="200px" required="true" default=""/>
         <param field="Mode4" label="Debug" width="75px">
             <options>
                 <option label="True" value="Debug"/>
@@ -24,16 +24,23 @@
 """
 import Domoticz
 from pybotvac import Robot
+from pybotvac import Account
 
 class BasePlugin:
-    enabled = False
+    #enabled = False
+
+    DEVICE_NAME = ''
+    DEVICE_SERIAL = ''
+    API_SECRET = ''
+    
     iconName = 'botvac-robot-vacuum-icon'
 
     statusUnit = 1
     controlUnit = 2
     scheduleUnit = 3
 
-    HeartBeatsCount = 0
+    heartbeatsInterval = 10
+    heartbeatsCount = 0
 
     controlValues = {
         0: 'Off',
@@ -50,7 +57,7 @@ class BasePlugin:
         "LevelActions": "|||||",
         "LevelNames": controlNameModes,
         "LevelOffHidden": "true",
-        "SelectorStyle": "0"
+        "SelectorStyle": "1"
     }
 
     # https://developers.neatorobotics.com/api/robot-remote-protocol/request-response-formats
@@ -107,6 +114,17 @@ class BasePlugin:
         return
 
     def onStart(self):
+
+        # List all robots associated with account
+        botvacAccount = Account(Parameters["Mode1"], Parameters["Mode2"]).robots
+        botvacDevice = next((botvac for botvac in botvacAccount if botvac.name == Parameters["Mode3"]), None)
+        if botvacDevice is None:
+            Domoticz.Log("No robot found")
+        else:
+            self.DEVICE_NAME = botvacDevice.name
+            self.DEVICE_SERIAL = botvacDevice.serial
+            self.API_SECRET = botvacDevice.secret
+
         if Parameters["Mode4"] == "Debug":
             Domoticz.Debugging(1)
             DumpConfigToLog()
@@ -124,7 +142,8 @@ class BasePlugin:
         if self.scheduleUnit not in Devices:
             Domoticz.Device(Name='Schedule', Unit=self.scheduleUnit, TypeName='Switch', Image=iconID, Used=1).Create()
 
-        Domoticz.Heartbeat(int(Parameters['Mode5']))
+        self.botvacGetValues()
+        Domoticz.Heartbeat(self.heartbeatsInterval)
         Domoticz.Debug("onStart called")
 
     def onStop(self):
@@ -138,15 +157,15 @@ class BasePlugin:
 
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Log("onCommand called for Unit " + str(Unit) + ": Parameter '" + str(Command) + "', Level: " + str(Level))
-        DEVICE_NAME = Parameters["Mode1"]
-        DEVICE_SERIAL = Parameters["Mode2"]
-        API_SECRET = Parameters["Mode3"]
-        robot = Robot(DEVICE_SERIAL, API_SECRET, DEVICE_NAME)
+        #DEVICE_NAME = Parameters["Mode1"]
+        #DEVICE_SERIAL = Parameters["Mode2"]
+        #API_SECRET = Parameters["Mode3"]
+        robot = Robot(self.DEVICE_SERIAL, self.API_SECRET, self.DEVICE_NAME)
         response = robot.state
         state = response['state']
         action = response['action']
         category = response['cleaning']['category']
-        
+
         if self.statusUnit not in Devices:
             Domoticz.Error('Status device is required')
             return
@@ -154,14 +173,7 @@ class BasePlugin:
         if self.statusUnit == Unit:
             if 'On' == Command and self.isOFF:
                 robot.start_cleaning()
-                if category == 1: #manual
-                    Devices[self.statusUnit].Update(1, self.actions.get(3))
-                elif category == 2: #house
-                    Devices[self.statusUnit].Update(1, self.actions.get(1))
-                elif category == 3: #spot
-                    Devices[self.statusUnit].Update(1, self.actions.get(2))
-                elif category == 4: #map
-                    Devices[self.statusUnit].Update(1, self.actions.get(11))
+                Devices[self.statusUnit].Update(1, self.actions.get(action))
             elif 'Off' == Command and self.isON:
                 robot.send_to_base()
                 Devices[self.statusUnit].Update(0, self.actions.get(4))
@@ -173,18 +185,18 @@ class BasePlugin:
                 elif state == 3: #Pause
                     robot.resume_cleaning()
                 Devices[self.statusUnit].Update(1, self.actions.get(action))
-            elif Level == 20 and self.isON: # Base
+            elif Level == 20: # Base
                 robot.send_to_base()
-                Devices[self.statusUnit].Update(0, self.actions.get(action))
+                Devices[self.statusUnit].Update(0, self.actions.get(4))
             elif Level == 30 and self.isOFF: # Spot
                 robot.start_spot_cleaning()
-                Devices[self.statusUnit].Update(1, self.actions.get(action))
+                Devices[self.statusUnit].Update(1, self.actions.get(2))
             elif Level == 40 and self.isON: # Pause
                 robot.pause_cleaning()
-                Devices[self.statusUnit].Update(0, self.actions.get(action))
+                Devices[self.statusUnit].Update(0, self.states.get(3))
             elif Level == 50 and self.isON: # Stop
                 robot.stop_cleaning()
-                Devices[self.statusUnit].Update(0, self.actions.get(action))
+                Devices[self.statusUnit].Update(0, self.actions.get(100))
 
         if self.scheduleUnit == Unit:
             if Command == 'On' :
@@ -193,8 +205,8 @@ class BasePlugin:
             elif Command == 'Off' :
                 robot.disable_schedule()
                 Devices[self.scheduleUnit].Update(0,'')
-        
-        
+
+
     def onNotification(self, Name, Subject, Text, Status, Priority, Sound, ImageFile):
         Domoticz.Debug("Notification: " + Name + "," + Subject + "," + Text + "," + Status + "," + str(Priority) + "," + Sound + "," + ImageFile)
 
@@ -203,18 +215,19 @@ class BasePlugin:
 
     def onHeartbeat(self):
         Domoticz.Debug("onHeartbeat called")
-        self.HeartBeatsCount = self.HeartBeatsCount + 1
-        # API call every 6 heartbeats (~1min)
-        if self.HeartBeatsCount >= 6:
-            self.HeartBeatsCount = 0
+        self.heartbeatsCount = self.heartbeatsCount + 1
+        if int(Parameters['Mode5']) <= self.heartbeatsInterval * self.heartbeatsCount:
+        # API call every heartbeats (~10s) * hearbeatsCount)
+            self.heartbeatsCount = 0
             self.botvacGetValues()
 
     def botvacGetValues(self):
-        DEVICE_NAME = Parameters["Mode1"]
-        DEVICE_SERIAL = Parameters["Mode2"]
-        API_SECRET = Parameters["Mode3"]
-        robot = Robot(DEVICE_SERIAL, API_SECRET, DEVICE_NAME)
+        # DEVICE_NAME = Parameters["Mode1"]
+        # DEVICE_SERIAL = Parameters["Mode2"]
+        # API_SECRET = Parameters["Mode3"]
+        robot = Robot(self.DEVICE_SERIAL, self.API_SECRET, self.DEVICE_NAME)
         response = robot.state
+        Domoticz.Debug(str(response))
 
         isCharging = response['details']['isCharging']
         isDocked = response['details']['isDocked']
@@ -224,29 +237,52 @@ class BasePlugin:
         action = response['action']
 
         device_on = 1 if state == 2 else 0
+        controleValue = 0
 
         if state == 1: # Idle
             if isDocked:
-                statusValue = self.actions.get(102) if isCharging else self.actions.get(101) #Charging or Base
+                statusValue = self.actions.get(102) + " (" + charge + "%)" if isCharging else self.actions.get(101) #Charging or Base
             else:
                 statusValue = self.actions.get(100) #Stopped
-            controlValue = controlValues.get(20) if isDocked else controlValues.get(50) #Base or Stop
+            controlValue = 20 if isDocked else 50 #Base or Stop
 
         elif state == 2: #Busy
             statusValue = self.actions.get(action)
             if action in [1, 3, 11]: #House cleaning, Manual cleaning or Map cleaning
-                controlValue = self.controlValues.get(10) #Clean
+                controlValue = 10 #Clean
             elif action == 2: #Spot
-                controlValue = self.controlValues.get(30) #Spot
+                controlValue = 30 #Spot
 
         elif state in [3, 4]: #Pause or Error
             statusValue = self.states.get(state)
-            controlValue = self.controlValues.get(40) if self.states.get(state) == 3 else self.controlValues.get(50) #Pause or Stop
+            controlValue = 40 if state == 3 else 50 #Pause or Stop
 
         Devices[self.statusUnit].Update(device_on, str(statusValue))
+        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+            Devices[self.statusUnit].Name,
+            str(device_on),
+            str(statusValue)
+        ))
         Devices[self.controlUnit].Update(1, str(controlValue))
+        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+            Devices[self.controlUnit].Name,
+            '1',
+            str(controlValue)
+        ))
         Devices[self.scheduleUnit].Update(isScheduleEnabled, '')
+        Domoticz.Debug("Update %s: nValue %s - sValue %s" % (
+            Devices[self.scheduleUnit].Name,
+            str(isScheduleEnabled),
+            "empty"
+        ))
 
+    @property
+    def isON(self):
+        return Devices[self.statusUnit].nValue == 1
+
+    @property
+    def isOFF(self):
+        return Devices[self.statusUnit].nValue == 0
 
 global _plugin
 _plugin = BasePlugin()
@@ -285,13 +321,6 @@ def onHeartbeat():
 
 
 ### Generic helper functions
-@property
-def isON(self):
-    return Devices[self.statusUnit].nValue == 1
-
-@property
-def isOFF(self):
-    return Devices[self.statusUnit].nValue == 0
 
 def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255):
     if Unit not in Devices: return
@@ -310,7 +339,6 @@ def UpdateDevice(Unit, nValue, sValue, BatteryLevel=255):
         ))
     return
 
-    
 def UpdateIcon(Unit, iconID):
     if Unit not in Devices: return
     d = Devices[Unit]
