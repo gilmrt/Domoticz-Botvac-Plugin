@@ -35,7 +35,7 @@ Now go to **Setup** -> **Hardware** in your Domoticz interface and add type with
 | ----- | ---------- |
 | Neato email | Neato email account |
 | Neato password | Neato password |
-| Botvac vacuum name: | The name of your Botvac vacuum |
+| Botvac vacuum name | The name of your Botvac vacuum |
 | Debug | When set to true the plugin shows additional information in the Domoticz log |
 | Update interval | In seconds, this determines with which interval the plugin polls the status of Vacuum. Minimun 10s. Default 60s   |
 
