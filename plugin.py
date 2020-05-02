@@ -129,8 +129,7 @@ class BasePlugin:
             Domoticz.Debugging(1)
             DumpConfigToLog()
 
-        if self.iconName not in Images: 
-            Domoticz.Image('icons.zip').Create()
+        if (self.iconName not in Images): Domoticz.Image('icons.zip').Create()
         iconID = Images[self.iconName].ID
 
         if self.statusUnit not in Devices:
