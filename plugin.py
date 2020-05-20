@@ -3,7 +3,7 @@
 # Author: gilmrt
 #
 """
-<plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.0.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
+<plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.1.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
     <description>
         <h2>Botvac vacuum</h2><br/>
         Python plugin to control your Neato Botvac Vacuum
@@ -80,7 +80,8 @@ class BasePlugin:
         15: 'Suspended Exploration',
         100: 'Stopped',
         101: 'Based',
-        102: 'Charging'
+        102: 'Charging',
+        103: 'Cleaning'
     }
 
     states = {
@@ -168,8 +169,8 @@ class BasePlugin:
 
         if self.statusUnit == Unit:
             if 'On' == Command and self.isOFF:
-                robot.start_cleaning()
-                UpdateDevice(self.statusUnit, 1, self.actions.get(action))
+                robot.start_cleaning(mode=2, navigation_mode=2, category=4)
+                UpdateDevice(self.statusUnit, 1, self.actions.get(103))
             elif 'Off' == Command and self.isON:
                 robot.send_to_base()
                 UpdateDevice(self.statusUnit, 0, self.actions.get(4))
@@ -177,10 +178,10 @@ class BasePlugin:
         if self.controlUnit == Unit:
             if Level == 10 and self.isOFF: # Clean
                 if state == 1: #Idle
-                    robot.start_cleaning()
+                    robot.start_cleaning(mode=2, navigation_mode=2, category=4)
                 elif state == 3: #Pause
                     robot.resume_cleaning()
-                UpdateDevice(self.statusUnit, 1, self.actions.get(action))
+                UpdateDevice(self.statusUnit, 1, self.actions.get(103))
             elif Level == 20: # Base
                 robot.send_to_base()
                 UpdateDevice(self.statusUnit, 0, self.actions.get(4))
