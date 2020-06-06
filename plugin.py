@@ -3,7 +3,7 @@
 # Author: gilmrt
 #
 """
-<plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.1.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
+<plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.2.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
     <description>
         <h2>Botvac vacuum</h2><br/>
         Python plugin to control your Neato Botvac Vacuum
@@ -130,8 +130,17 @@ class BasePlugin:
             Domoticz.Debugging(1)
             DumpConfigToLog()
 
-        if (self.iconName not in Images): Domoticz.Image('icons.zip').Create()
-        iconID = Images[self.iconName].ID
+        #if (self.iconName not in Images): Domoticz.Image('icons.zip').Create()
+        #iconID = Images[self.iconName].ID
+
+        # Check if images are in database
+        if self.iconName not in Images:
+            Domoticz.Image("icons.zip").Create()
+        try:
+            iconID = Images[self.iconName].ID
+        except:
+            iconID = 0
+        Domoticz.Debug("Image created. ID: " + str(iconID))
 
         if self.statusUnit not in Devices:
             Domoticz.Device(Name='Status', Unit=self.statusUnit, Type=17,  Switchtype=17, Image=iconID, Used=1).Create()
