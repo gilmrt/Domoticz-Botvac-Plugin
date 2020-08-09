@@ -29,6 +29,11 @@ cd domoticz/plugins
 git clone https://github.com/gilmrt/Domoticz-Botvac-Plugin.git
 ```
 
+Restart the Domoticz service
+```
+sudo service domoticz restart
+```
+
 Now go to **Setup** -> **Hardware** in your Domoticz interface and add type with name **Botvac Vacuum**.
 
 | Field | Information|
