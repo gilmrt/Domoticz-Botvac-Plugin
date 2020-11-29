@@ -178,7 +178,7 @@ class BasePlugin:
 
         if self.statusUnit == Unit:
             if 'On' == Command and self.isOFF:
-                robot.start_cleaning(mode=2, navigation_mode=2, category=4)
+                robot.start_cleaning()
                 UpdateDevice(self.statusUnit, 1, self.actions.get(103))
             elif 'Off' == Command and self.isON:
                 robot.send_to_base()
@@ -187,7 +187,7 @@ class BasePlugin:
         if self.controlUnit == Unit:
             if Level == 10 and self.isOFF: # Clean
                 if state == 1: #Idle
-                    robot.start_cleaning(mode=2, navigation_mode=2, category=4)
+                    robot.start_cleaning()
                 elif state == 3: #Pause
                     robot.resume_cleaning()
                 UpdateDevice(self.statusUnit, 1, self.actions.get(103))
