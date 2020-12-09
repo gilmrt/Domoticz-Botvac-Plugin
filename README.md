@@ -29,6 +29,12 @@ cd domoticz/plugins
 git clone https://github.com/gilmrt/Domoticz-Botvac-Plugin.git
 ```
 
+Only for Botvac D5 owners:
+If you are using map, please add this step, if not go,to next step
+```
+git checkout BotvacD5
+```
+
 Restart the Domoticz service
 ```
 sudo service domoticz restart
