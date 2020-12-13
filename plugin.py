@@ -24,7 +24,7 @@
 """
 import Domoticz
 from pybotvac import Robot
-from pybotvac import Account
+from pybotvac import Account, Neato, PasswordSession
 
 class BasePlugin:
     #enabled = False
@@ -117,7 +117,8 @@ class BasePlugin:
     def onStart(self):
 
         # List all robots associated with account
-        botvacAccount = Account(Parameters["Username"], Parameters["Password"]).robots
+        botvacSession = PasswordSession(email=Parameters['Username'], password=Parameters['Password'], vendor=Neato())
+        botvacAccount = Account(botvacSession).robots
         botvacDevice = next((botvac for botvac in botvacAccount if botvac.name == Parameters["Mode3"]), None)
         if botvacDevice is None:
             Domoticz.Log("No robot found")

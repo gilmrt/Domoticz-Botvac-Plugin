@@ -1,7 +1,7 @@
 # Domoticz-Botvac-Plugin
  Domoticz Plugin for Botvac (Neato) Vacuum
  
- *This plugin uses the [pybotvac](https://github.com/stianaske/pybotvac) library*
+ *This plugin uses the [pybotvac](https://github.com/stianaske/pybotvac) library 0.0.19 or later*
 
 ## How it works
 
@@ -24,12 +24,7 @@ sudo apt-get update && sudo apt-get install python3 python3-dev pip3
 
 Install Botvac plugin dependencies:
 ```
-sudo pip3 install pybotvac==0.0.17 urllib3 requests
-```
-
-**OPTIONAL**: if you already have a newer version of pybotvac, you can force to downgrade version using:
-```
-sudo pip3 install --upgrade pybotvac==0.0.17
+sudo pip3 install pybotvac urllib3 requests
 ```
 
 Then go to plugins folder and clone repository:
@@ -38,7 +33,10 @@ cd domoticz/plugins
 git clone https://github.com/gilmrt/Domoticz-Botvac-Plugin.git
 ```
 
-**Only for Botvac D5 owners**: if you are using map, please add this step, if not go,to next step
+**Only for Botvac D5 owners**
+
+If you use persistent map for cleaning, please add this step so the cleaning will the map
+*(Map is not detected by the pybotvac before Botvac D7 version)*
 ```
 git checkout BotvacD5
 ```
@@ -61,7 +59,6 @@ Now go to **Setup** -> **Hardware** in your Domoticz interface and add type with
 After clicking on the Add button the new devices are available in **Setup** -> **Devices**.
 
 ## How to update plugin
-
 ```
 cd domoticz/plugins/Domoticz-Botvac-Plugin
 git pull
@@ -70,6 +67,14 @@ git pull
 Restart the Domoticz service
 ```
 sudo service domoticz restart
+```
+## OPTIONAL: Update pybotvac
+```
+pip3 install --upgrade pybotvac
+```
+or update to selected version using:
+```
+pip3 install --upgrade pybotvac==0.0.19
 ```
 
 ## Screenshots
@@ -83,3 +88,6 @@ Then go to your [account](https://neatorobotics.com/fr/my-neato/)
 or 
 Use the Neato mobile app
 
+## Custom Icons
+You can add dedicated custom icons in Domoticz by loading icons.zip in Settings/Custom Icons/Add<br>
+*INFO : I removed the automatic icons insertion due to a bug in Python Plugin in Domiticz which failed when plugin restart to create icons again causing error (seen in error logs)*
