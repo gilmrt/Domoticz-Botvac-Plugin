@@ -18,9 +18,18 @@ Plugin provides: Status, Control and schedule status devices
 ## Installation
 
 Before installation plugin check the `python3`, `python3-dev`, `pip3` is installed for Domoticz plugin system:
-
 ```
-sudo pip3 install pybotvac urllib3 requests
+sudo apt-get update && sudo apt-get install python3 python3-dev pip3
+```
+
+Install Botvac plugin dependencies:
+```
+sudo pip3 install pybotvac==0.0.17 urllib3 requests
+```
+
+**OPTIONAL**: if you already have a newer version of pybotvac, you can force to downgrade version using:
+```
+sudo pip3 install --upgrade pybotvac==0.0.17
 ```
 
 Then go to plugins folder and clone repository:
@@ -29,8 +38,7 @@ cd domoticz/plugins
 git clone https://github.com/gilmrt/Domoticz-Botvac-Plugin.git
 ```
 
-Only for Botvac D5 owners:
-If you are using map, please add this step, if not go,to next step
+**Only for Botvac D5 owners**: if you are using map, please add this step, if not go,to next step
 ```
 git checkout BotvacD5
 ```
