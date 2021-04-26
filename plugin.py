@@ -240,7 +240,7 @@ class BasePlugin:
         action = response['action']
 
         device_on = 1 if state == 2 else 0
-        controleValue = 0
+        controlValue = 0
 
         if state == 1: # Idle
             if isDocked:
