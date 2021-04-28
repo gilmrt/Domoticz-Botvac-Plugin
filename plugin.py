@@ -3,7 +3,7 @@
 # Author: gilmrt
 #
 """
-<plugin key="BotvacVaccum" name="Botvac Vaccum" author="gilmrt" version="1.2.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
+<plugin key="BotvacVaccum" name="Botvac Vacuum" author="gilmrt" version="1.2.0" externallink="https://github.com/gilmrt/Domoticz-Botvac-Plugin">
     <description>
         <h2>Botvac vacuum</h2><br/>
         Python plugin to control your Neato Botvac Vacuum
